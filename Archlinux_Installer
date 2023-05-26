@@ -21,9 +21,6 @@ LOCALE=""
 # Your Timezone. Use the command 'timedatectl list-timezones' to find your timezone. (i.e. America/Toronto)
 TIMEZONE=""
 
-# Do you want to format the partition type 'true' if you do, else the system will not be formatted. (default is true)
-FORMAT_DEVICE="true"
-
 ## Detect CPU and GPU. DON'T TOUCH THESE COMMANDS
 DETECT_CPU=`cat /proc/cpuinfo | tr -d " " | head -10 | grep vendor_id | cut -d : -f 2`
 DETECT_GPU=`lspci | grep VGA | cut -d ":" -f 3 | cut -d " " -f 2`
@@ -31,7 +28,7 @@ DETECT_GPU=`lspci | grep VGA | cut -d ":" -f 3 | cut -d " " -f 2`
 #<-- OS Install List -->
 
 ## Install KDE Plasma Desktop
-INSTALL_OS="alsa-utils appmenu-gtk-module archlinux-appstream-data aribb24 ark bash-completion bluez bluez-cups bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs chromium colord-sane cups cups-filters cups-pdf cups-pk-helper dbus-broker dolphin dolphin-plugins easy-rsa ebook-tools efibootmgr exfatprogs ffmpeg ffmpeg4.4 ffmpegthumbs firewalld flatpak git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-opencv gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server gstreamer-vaapi gwenview htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us icoutils iwd kaccounts-integration kamera kate kcalc kdeconnect kdegraphics-thumbnailers keditbookmarks kf5 kf5-aids kio-extras kio-gdrive konsole lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdbusmenu-qt6 libdvdcss libdvdnav libdvdread libgpod libnfs linux linux-firmware linux-firmware-bnx2x linux-firmware-qcom linux-headers lsb-release man-db man-pages mkinitcpio mtools net-tools networkmanager networkmanager-openvpn noto-fonts noto-fonts-cjk noto-fonts-emoji okular openssh orca p7zip partitionmanager pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf plasma power-profiles-daemon qpwgraph qt5-imageformats packagekit-qt5 realtime-privileges rtirq simple-scan spectacle steam steam-native-runtime sudo system-config-printer ttf-liberation unarchiver unrar usbguard vim vim-runtime vlc wget wireless-regdb wireplumber xdg-desktop-portal xdg-user-dirs-gtk xf86-input-evdev xf86-input-libinput youtube-dl yt-dlp zram-generator"
+INSTALL_OS="alsa-utils appmenu-gtk-module archlinux-appstream-data ark bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs chromium colord-sane dbus-broker dolphin dolphin-plugins ebook-tools efibootmgr exfatprogs ffmpeg ffmpeg4.4 ffmpegthumbs firewalld flatpak git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server gwenview htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us icoutils iwd kaccounts-integration kamera kate kcalc kdeconnect kdegraphics-thumbnailers keditbookmarks kf5 kf5-aids kio-extras kio-gdrive konsole lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdbusmenu-qt6 libdvdcss libdvdnav libdvdread libgpod libnfs linux linux-firmware linux-firmware-bnx2x linux-firmware-qcom linux-headers lsb-release man-db man-pages mkinitcpio mtools net-tools networkmanager networkmanager-openvpn noto-fonts noto-fonts-cjk noto-fonts-emoji okular openssh orca p7zip partitionmanager pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf plasma power-profiles-daemon qt5-imageformats packagekit-qt5 realtime-privileges simple-scan spectacle steam steam-native-runtime sudo ttf-liberation unarchiver unrar usbguard vim vim-runtime vlc wget wireless-regdb wireplumber xdg-desktop-portal xdg-user-dirs-gtk xf86-input-evdev xf86-input-libinput youtube-dl yt-dlp zram-generator"
 
 #<-- GPU Driver Install List -->
 
@@ -55,48 +52,31 @@ install_os() {
     ## Mount root filesystem
     mount -t btrfs ${INSTALL_DEVICE} $MOUNT_DIR
 
-    ## Remove BTRFS root @ subvolume if it exists
-    if [[ -d "$MOUNT_DIR/@" ]]; then
-        rm -rf $MOUNT_DIR/@
-    fi
-    ## Remove BTRFS @opt subvolume if it exists
-    if [[ -d "$MOUNT_DIR/@opt" ]]; then
-        rm -rf $MOUNT_DIR/@opt
-    fi
-    ## Remove BTRFS @tmp subvolume if it exists
-    if [[ -d "$MOUNT_DIR/@tmp" ]]; then
-        rm -rf $MOUNT_DIR/@tmp
-    fi
-    ## Remove BTRFS @var subvolume if it exists
-    if [[ -d "$MOUNT_DIR/@var" ]]; then
-        rm -rf $MOUNT_DIR/@var
-    fi
-
     ## Create BTRFS subvolumes
     btrfs subvolume create $MOUNT_DIR/@
     btrfs subvolume create $MOUNT_DIR/@home
-    btrfs subvolume create $MOUNT_DIR/@opt
-    btrfs subvolume create $MOUNT_DIR/@tmp
-    btrfs subvolume create $MOUNT_DIR/@var
+    btrfs subvolume create $MOUNT_DIR/@log
+    btrfs subvolume create $MOUNT_DIR/@opt    
+    btrfs subvolume create $MOUNT_DIR/@pkg
 
     ## Unmount root filesystem
     umount $MOUNT_DIR
     echo "Created Subvolumes..." && sleep 5
 
     ## Mount BTRFS root @ subvolume
-    mount -t btrfs -o rw,compress=zstd,noatime,subvol=@ ${INSTALL_DEVICE} $MOUNT_DIR
+    mount -t btrfs -o rw,compress=zstd,subvol=@ ${INSTALL_DEVICE} $MOUNT_DIR
 
     ## Make system directories
     mkdir -p $MOUNT_DIR/home
     mkdir -p $MOUNT_DIR/opt
-    mkdir -p $MOUNT_DIR/tmp
-    mkdir -p $MOUNT_DIR/var
+    mkdir -p $MOUNT_DIR/var/cache/pacman/pkg
+    mkdir -p $MOUNT_DIR/var/log
 
     ## Mount BTRFS subvolumes   
-    mount -t btrfs -o rw,compress=zstd,noatime,subvol=@home ${INSTALL_DEVICE} $MOUNT_DIR/home
-    mount -t btrfs -o rw,compress=zstd,noatime,subvol=@opt ${INSTALL_DEVICE} $MOUNT_DIR/opt
-    mount -t btrfs -o rw,compress=zstd,noatime,subvol=@tmp ${INSTALL_DEVICE} $MOUNT_DIR/tmp
-    mount -t btrfs -o rw,compress=zstd,noatime,subvol=@var ${INSTALL_DEVICE} $MOUNT_DIR/var
+    mount -t btrfs -o rw,compress=zstd,subvol=@home ${INSTALL_DEVICE} $MOUNT_DIR/home
+    mount -t btrfs -o rw,compress=zstd,subvol=@log ${INSTALL_DEVICE} $MOUNT_DIR/var/log
+    mount -t btrfs -o rw,compress=zstd,subvol=@opt ${INSTALL_DEVICE} $MOUNT_DIR/opt
+    mount -t btrfs -o rw,compress=zstd,subvol=@pkg ${INSTALL_DEVICE} $MOUNT_DIR/var/cache/pacman/pkg
 
     ## Make efi directory
     mkdir -p $MOUNT_DIR/boot/efi
@@ -198,21 +178,16 @@ install_os() {
     arch-chroot $MOUNT_DIR systemctl enable avahi-daemon.service
     arch-chroot $MOUNT_DIR systemctl enable avahi-dnsconfd.service
     arch-chroot $MOUNT_DIR systemctl enable bluetooth.service
-    arch-chroot $MOUNT_DIR systemctl enable cups.service
-    arch-chroot $MOUNT_DIR systemctl enable cups-browsed.service
     arch-chroot $MOUNT_DIR systemctl disable dbus.service
     arch-chroot $MOUNT_DIR systemctl enable dbus-broker.service
     arch-chroot $MOUNT_DIR systemctl enable fstrim.timer
     arch-chroot $MOUNT_DIR systemctl enable NetworkManager.service
-    arch-chroot $MOUNT_DIR systemctl enable rtirq.service
-    arch-chroot $MOUNT_DIR systemctl enable rtirq-resume.service
     arch-chroot $MOUNT_DIR systemctl enable sddm.service
 
     ## Add user to groups
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME audio
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME avahi
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME colord
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME cups
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME flatpak
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME games
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME geoclue
@@ -244,9 +219,7 @@ unmount_os() {
 
 #<-- Main Program UNCOMMENT TO ACTIVATE --> ############
 if [[ $USER == "root" ]]; then
-    if [[ $FORMAT_DEVICE == "true" ]]; then
-        partition_system
-    fi
+    partition_system
     install_os
     unmount_os
 fi
