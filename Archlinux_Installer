@@ -2,7 +2,7 @@
 
 ## Make sure to have pacman.conf in the same directory as Archlinux_Installer before executing this script.
 
-# Boot and OS partitions. DON'T TOUCH THESE COMMANDS
+# Boot and OS partitions. (i.e. /dev/sda2) Use a partition manager like cfdisk to create.
 BOOT_DEVICE=""
 INSTALL_DEVICE=""
 
@@ -21,72 +21,55 @@ LOCALE=""
 # Your Timezone. Use the command 'timedatectl list-timezones' to find your timezone. (i.e. America/Toronto)
 TIMEZONE=""
 
+# Name Your OS Install (Default is Archlinux)
+OS_NAME="Archlinux"
+
 ## Detect CPU and GPU. DON'T TOUCH THESE COMMANDS
 DETECT_CPU=`cat /proc/cpuinfo | tr -d " " | head -10 | grep vendor_id | cut -d : -f 2`
 DETECT_GPU=`lspci | grep VGA | cut -d ":" -f 3 | cut -d " " -f 2`
 
+## Detect Disk Partition UUIDS
+DETECT_BOOT=`lsblk -o UUID $BOOT_DEVICE | tr "\n" "," | cut -d "," -f 2`
+DETECT_INSTALL=`lsblk -o UUID $INSTALL_DEVICE | tr "\n" "," | cut -d "," -f 2`
+
 #<-- OS Install List -->
 
-## Install KDE Plasma Desktop
-INSTALL_OS="alsa-utils appmenu-gtk-module archlinux-appstream-data ark bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs chromium colord-sane dbus-broker dolphin dolphin-plugins ebook-tools efibootmgr exfatprogs ffmpeg ffmpeg4.4 ffmpegthumbs firewalld flatpak git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server gwenview htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us icoutils iwd kaccounts-integration kamera kate kcalc kdeconnect kdegraphics-thumbnailers keditbookmarks kf5 kf5-aids kio-extras kio-gdrive konsole lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdbusmenu-qt6 libdvdcss libdvdnav libdvdread libgpod libnfs linux linux-firmware linux-firmware-bnx2x linux-firmware-qcom linux-headers lsb-release man-db man-pages mkinitcpio mtools net-tools networkmanager networkmanager-openvpn noto-fonts noto-fonts-cjk noto-fonts-emoji okular openssh orca p7zip partitionmanager pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf plasma power-profiles-daemon qt5-imageformats packagekit-qt5 realtime-privileges simple-scan spectacle steam steam-native-runtime sudo ttf-liberation unarchiver unrar usbguard vim vim-runtime vlc wget wireless-regdb wireplumber xdg-desktop-portal xdg-user-dirs-gtk xf86-input-evdev xf86-input-libinput youtube-dl yt-dlp zram-generator"
+## Install Base System
+INSTALL_BASE="alsa-utils apparmor archlinux-keyring base base-devel bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs dbus-broker efibootmgr exfatprogs ffmpeg git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us iwd lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 linux-zen linux-zen-headers linux-firmware lsb-release man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager networkmanager-openvpn openssh pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf realtime-privileges rtirq sudo vim vim-runtime wireless-regdb wireplumber xf86-input-evdev xf86-input-libinput zram-generator"
+
+## Install Plasma Desktop
+INSTALL_DESKTOP="appmenu-gtk-module archlinux-appstream-data ark dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox firewalld flatpak gamemode gwenview icoutils kaccounts-integration kamera kate kcalc kdeconnect kdegraphics-thumbnailers keditbookmarks kf5 kf5-aids kio-extras kio-gdrive konsole lib32-gamemode libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdbusmenu-qt6 libgpod libnfs noto-fonts noto-fonts-cjk noto-fonts-emoji okular orca p7zip partitionmanager plasma qt5-imageformats packagekit-qt5 simple-scan spectacle steam steam-native-runtime ttf-liberation unarchiver unrar usbguard vlc wget xdg-user-dirs-gtk youtube-dl yt-dlp"
 
 #<-- GPU Driver Install List -->
 
 ## AMD GPU DRIVERS
-AMD_DRV="amdvlk amf-headers base base-devel lib32-amdvlk lib32-vulkan-mesa-layers lib32-vulkan-radeon multilib-devel vulkan-mesa-layers vulkan-radeon"
+AMD_DRV="lib32-vulkan-mesa-layers lib32-vulkan-radeon vulkan-mesa-layers vulkan-radeon"
 
 ## INTEL GPU DRIVERS
-INTEL_DRV="base base-devel clinfo intel-compute-runtime intel-media-driver lib32-ocl-icd lib32-vulkan-intel lib32-vulkan-mesa-layers multilib-devel ocl-icd onednn onevpl onevpl-cpu onevpl-intel-gpu opencl-headers vulkan-intel vulkan-mesa-layers"
+INTEL_DRV="clinfo intel-compute-runtime intel-media-driver lib32-ocl-icd lib32-vulkan-intel lib32-vulkan-mesa-layers ocl-icd onednn onevpl onevpl-cpu onevpl-intel-gpu opencl-headers vulkan-intel vulkan-mesa-layers"
 
 ## NVIDIA GPU DRIVERS
-NVIDIA_DRV="base base-devel clinfo lib32-libva-vdpau-driver lib32-nvidia-utils lib32-ocl-icd lib32-opencl-nvidia libva-vdpau-driver libvdpau-va-gl multilib-devel nvidia-dkms nvidia-utils ocl-icd opencl-headers opencl-nvidia vdpauinfo"
+NVIDIA_DRV="clinfo lib32-libva-vdpau-driver lib32-nvidia-utils lib32-ocl-icd lib32-opencl-nvidia libva-vdpau-driver libvdpau-va-gl nvidia-dkms nvidia-utils ocl-icd opencl-headers opencl-nvidia vdpauinfo"
 
 ##<-- Install System, DO NOT EDIT BELOW THIS POINT IF YOU DON'T KNOW WHAT YOU'RE DOING! -->
 
 ##<-- System Install Options -->
+
+install_desktop() {
+    ## Install Desktop Environment
+    arch-chroot $MOUNT_DIR pacman -S --noconfirm $INSTALL_DESKTOP
+
+    ## Enable desktop services system-wide
+    arch-chroot $MOUNT_DIR systemctl enable sddm.service
+
+    ## Add user to groups
+    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME flatpak
+    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME sddm
+    echo "Installed Desktop Enviornment..." && sleep 5
+}
+
 install_os() {
-    ## Label BTRFS root partition and efi boot partition
-    btrfs filesystem label ${INSTALL_DEVICE} Archlinux
-    fatlabel ${BOOT_DEVICE} BOOT
-
-    ## Mount root filesystem
-    mount -t btrfs ${INSTALL_DEVICE} $MOUNT_DIR
-
-    ## Create BTRFS subvolumes
-    btrfs subvolume create $MOUNT_DIR/@
-    btrfs subvolume create $MOUNT_DIR/@home
-    btrfs subvolume create $MOUNT_DIR/@log
-    btrfs subvolume create $MOUNT_DIR/@opt    
-    btrfs subvolume create $MOUNT_DIR/@pkg
-
-    ## Unmount root filesystem
-    umount $MOUNT_DIR
-    echo "Created Subvolumes..." && sleep 5
-
-    ## Mount BTRFS root @ subvolume
-    mount -t btrfs -o rw,compress=zstd,subvol=@ ${INSTALL_DEVICE} $MOUNT_DIR
-
-    ## Make system directories
-    mkdir -p $MOUNT_DIR/home
-    mkdir -p $MOUNT_DIR/opt
-    mkdir -p $MOUNT_DIR/var/cache/pacman/pkg
-    mkdir -p $MOUNT_DIR/var/log
-
-    ## Mount BTRFS subvolumes   
-    mount -t btrfs -o rw,compress=zstd,subvol=@home ${INSTALL_DEVICE} $MOUNT_DIR/home
-    mount -t btrfs -o rw,compress=zstd,subvol=@log ${INSTALL_DEVICE} $MOUNT_DIR/var/log
-    mount -t btrfs -o rw,compress=zstd,subvol=@opt ${INSTALL_DEVICE} $MOUNT_DIR/opt
-    mount -t btrfs -o rw,compress=zstd,subvol=@pkg ${INSTALL_DEVICE} $MOUNT_DIR/var/cache/pacman/pkg
-
-    ## Make efi directory
-    mkdir -p $MOUNT_DIR/boot/efi
-
-    ## Mount the efi partition
-    mount ${BOOT_DEVICE} $MOUNT_DIR/boot/efi
-    echo "Mounted Partitions and Subvolumes..." && sleep 5
-
-    ## Initialize pacman-keyring (host)
-    pacman -Syy --noconfirm archlinux-keyring
+    ## Initialize pacman-keyring
     pacman-key --init
     pacman-key --populate archlinux
 
@@ -94,18 +77,23 @@ install_os() {
     install -Dm644 pacman.conf /etc/pacman.conf
     install -Dm644 pacman.conf $MOUNT_DIR/etc/pacman.conf
 
+    ## Install System
+    pacstrap $MOUNT_DIR $INSTALL_BASE
+    arch-chroot $MOUNT_DIR pacman-key --init
+    arch-chroot $MOUNT_DIR pacman-key --populate archlinux
+
     ## Install the display drivers
     if [[ "$DETECT_GPU" == "Advanced" ]]; then
         ## Install AMD GPU drivers
-        pacstrap $MOUNT_DIR $AMD_DRV
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm $MOUNT_DIR $AMD_DRV
         echo "Installed AMD Drivers..." && sleep 5
     elif [[ "$DETECT_GPU" == "Intel" ]]; then
         ## Install Intel GPU drivers
-        pacstrap $MOUNT_DIR $INTEL_DRV
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm $MOUNT_DIR $INTEL_DRV
         echo "Installed Intel Drivers..." && sleep 5
     elif [[ "$DETECT_GPU" == "NVIDIA" ]]; then
         ## Install Nvidia GPU drivers
-        pacstrap $MOUNT_DIR $NVIDIA_DRV
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm $MOUNT_DIR $NVIDIA_DRV
         ## Enable Nvidia related services
         arch-chroot $MOUNT_DIR systemctl enable nvidia-hibernate
         arch-chroot $MOUNT_DIR systemctl enable nvidia-persistenced
@@ -114,13 +102,6 @@ install_os() {
         arch-chroot $MOUNT_DIR systemctl enable nvidia-suspend
         echo "Installed Nvidia Drivers..." && sleep 5
     fi
-
-    ## Initialize pacman-keyring (chroot)
-    arch-chroot $MOUNT_DIR pacman-key --init
-    arch-chroot $MOUNT_DIR pacman-key --populate archlinux
-
-    ## Install OS packages
-    arch-chroot $MOUNT_DIR pacman -S --noconfirm $INSTALL_OS
 
     ## Generate filesystem mounts
     genfstab -U $MOUNT_DIR > $MOUNT_DIR/etc/fstab
@@ -135,9 +116,9 @@ install_os() {
     fi
     
     ## Install GRUB
-    arch-chroot $MOUNT_DIR grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id="Arch Linux" $BOOT_DEVICE
+    arch-chroot $MOUNT_DIR grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id="$OS_NAME" $BOOT_DEVICE
     ## Configure GRUB
-    sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"root=LABEL=Archlinux rootfstype=btrfs resume=LABEL=Archlinux rootflags=subvol=@ loglevel=3 mitigations=off threadirqs usbcore.autosuspend=-1\"/" $MOUNT_DIR/etc/default/grub
+    sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"root=UUID=$DETECT_INSTALL rootfstype=btrfs resume=UUID=$DETECT_INSTALL rootflags=subvol=@ loglevel=3 lsm=landlock,lockdown,yama,integrity,apparmor,bpf mitigations=off nowatchdog threadirqs usbbcore.autosuspend=-1\"/" $MOUNT_DIR/etc/default/grub
     sed -i -e "s/#GRUB_DISABLE_SUBMENU=y/GRUB_DISABLE_SUBMENU=y/" $MOUNT_DIR/etc/default/grub
     ## Initialize GRUB
     arch-chroot $MOUNT_DIR grub-mkconfig -o /boot/grub/grub.cfg
@@ -149,6 +130,23 @@ install_os() {
     echo "compression-algorithm = zstd" >> $MOUNT_DIR/etc/systemd/zram-generator.conf
     echo "options = discard" >> $MOUNT_DIR/etc/systemd/zram-generator.conf
     echo "swap-priority = 32767" >> $MOUNT_DIR/etc/systemd/zram-generator.conf
+
+    ## Create Disk Rules
+    echo "HDD" > $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
+    echo "ACTION==\"add|change\", KERNEL==\"sd[a-z]*\", ATTR{queue/rotational}==\"1\", ATTR{queue/scheduler}=\"bfq\"" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
+    echo "SSD" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
+    echo "ACTION==\"add|change\", KERNEL==\"sd[a-z]*|mmcblk[0-9]*\", ATTR{queue/rotational}==\"0\", ATTR{queue/scheduler}=\"none\"" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
+    echo "NVME SSD" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
+    echo "ACTION==\"add|change\", KERNEL==\"nvme[0-9]*\", ATTR{queue/rotational}==\"0\", ATTR{queue/scheduler}=\"none\"" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
+
+    ## Disable Core Dumps
+    echo "kernel.core_pattern=/dev/null" > $MOUNT_DIR/etc/sysctl.d/50-coredump.conf
+
+    ## Set Swappiness to 10
+    echo "vm.swappiness = 10" > $MOUNT_DIR/etc/sysctl.d/90-swappiness.conf
+
+    ## Set Maximum File Watches to 600000
+    echo "fs.inotify.max_user_watches = 600000" > $MOUNT_DIR/etc/sysctl.d/90-max_user_watches.conf
 
     ## Set hostname
     echo "$HOSTNAME" > $MOUNT_DIR/etc/hostname
@@ -182,32 +180,70 @@ install_os() {
     arch-chroot $MOUNT_DIR systemctl enable dbus-broker.service
     arch-chroot $MOUNT_DIR systemctl enable fstrim.timer
     arch-chroot $MOUNT_DIR systemctl enable NetworkManager.service
-    arch-chroot $MOUNT_DIR systemctl enable sddm.service
+    arch-chroot $MOUNT_DIR systemctl enable rtirq.service
+    arch-chroot $MOUNT_DIR systemctl enable rtirq-resume.service
 
     ## Add user to groups
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME audio
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME avahi
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME colord
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME flatpak
+    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME gamemode
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME games
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME geoclue
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME openvpn
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME saned
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME sddm
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME realtime
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME rtkit
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME video
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME wheel
-    echo "Installed Archlinux OS..." && sleep 5
+    echo "Installed Base System..." && sleep 5
+}
+
+mount_filesystem() {
+    ## Mount root filesystem
+    mount -t btrfs $INSTALL_DEVICE $MOUNT_DIR
+
+    ## Create BTRFS subvolumes
+    btrfs subvolume create $MOUNT_DIR/@
+    btrfs subvolume create $MOUNT_DIR/@home
+    btrfs subvolume create $MOUNT_DIR/@log
+    btrfs subvolume create $MOUNT_DIR/@opt
+    btrfs subvolume create $MOUNT_DIR/@pkg
+
+    ## Unmount root filesystem
+    umount $MOUNT_DIR
+    echo "Created Subvolumes..." && sleep 5
+
+    ## Mount BTRFS root @ subvolume
+    mount -t btrfs -o rw,compress=zstd,subvol=@ $INSTALL_DEVICE $MOUNT_DIR
+
+    ## Make system directories
+    mkdir -p $MOUNT_DIR/home
+    mkdir -p $MOUNT_DIR/opt
+    mkdir -p $MOUNT_DIR/var/cache/pacman/pkg
+    mkdir -p $MOUNT_DIR/var/log
+
+    ## Mount BTRFS subvolumes
+    mount -t btrfs -o rw,compress=zstd,subvol=@home $INSTALL_DEVICE $MOUNT_DIR/home
+    mount -t btrfs -o rw,compress=zstd,subvol=@log $INSTALL_DEVICE $MOUNT_DIR/var/log
+    mount -t btrfs -o rw,compress=zstd,subvol=@opt $INSTALL_DEVICE $MOUNT_DIR/opt
+    mount -t btrfs -o rw,compress=zstd,subvol=@pkg $INSTALL_DEVICE $MOUNT_DIR/var/cache/pacman/pkg
+
+    ## Make efi directory
+    mkdir -p $MOUNT_DIR/boot/efi
+
+    ## Mount the efi partition
+    mount $BOOT_DEVICE $MOUNT_DIR/boot/efi
+    echo "Mounted Partitions..." && sleep 5
 }
 
 ##<-- Partition Drives -->
 partition_system() {
     ## Create A UEFI Boot Partition
-    mkfs.vfat -F32 ${BOOT_DEVICE}
+    mkfs.vfat -F32 $BOOT_DEVICE
 
     ## Create A BTRFS root partition
-    mkfs.btrfs -f ${INSTALL_DEVICE}
+    mkfs.btrfs -f $INSTALL_DEVICE
+
+    ## Label BTRFS root partition and efi boot partition
+    btrfs filesystem label $INSTALL_DEVICE $OS_NAME
+    fatlabel $BOOT_DEVICE BOOT
     echo "Formatted Partitions..." && sleep 5
 }
 
@@ -215,11 +251,14 @@ partition_system() {
 unmount_os() {
     ## Unmount Filesystems
     umount -lf $MOUNT_DIR
+    echo "$OS_NAME Install Complete..." && sleep 5
 }
 
 #<-- Main Program UNCOMMENT TO ACTIVATE --> ############
 if [[ $USER == "root" ]]; then
     partition_system
+    mount_filesystem
     install_os
+    install_desktop
     unmount_os
 fi
