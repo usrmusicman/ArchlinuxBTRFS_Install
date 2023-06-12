@@ -24,18 +24,10 @@ TIMEZONE=""
 # Name Your OS Install (Default is Archlinux)
 OS_NAME="Archlinux"
 
-## Detect CPU and GPU. DON'T TOUCH THESE COMMANDS
-DETECT_CPU=`cat /proc/cpuinfo | tr -d " " | head -10 | grep vendor_id | cut -d : -f 2`
-DETECT_GPU=`lspci | grep VGA | cut -d ":" -f 3 | cut -d " " -f 2`
-
-## Detect Disk Partition UUIDS
-DETECT_BOOT=`lsblk -o UUID $BOOT_DEVICE | tr "\n" "," | cut -d "," -f 2`
-DETECT_INSTALL=`lsblk -o UUID $INSTALL_DEVICE | tr "\n" "," | cut -d "," -f 2`
-
 #<-- OS Install List -->
 
 ## Install Base System
-INSTALL_BASE="alsa-utils apparmor archlinux-keyring base base-devel bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs chaotic-keyring chaotic-mirrorlist dbus-broker efibootmgr exfatprogs ffmpeg git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us iwd lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 linux-zen linux-zen-headers linux-firmware lsb-release man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager networkmanager-openvpn openssh pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf realtime-privileges rtirq sudo vim vim-runtime wireless-regdb wireplumber xf86-input-evdev xf86-input-libinput zram-generator"
+INSTALL_BASE="alsa-utils ananicy-cpp ananicy-rules-git apparmor archlinux-keyring base base-devel bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs chaotic-keyring chaotic-mirrorlist dbus-broker efibootmgr exfatprogs ffmpeg git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us iwd lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 linux-zen linux-zen-headers linux-firmware lsb-release man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager networkmanager-openvpn openssh pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf realtime-privileges rtirq sudo vim vim-runtime wireless-regdb wireplumber xf86-input-evdev xf86-input-libinput zram-generator"
 
 ## Install Plasma Desktop
 INSTALL_DESKTOP="appmenu-gtk-module archlinux-appstream-data ark dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox firewalld flatpak gamemode gwenview icoutils kaccounts-integration kamera kate kcalc kdeconnect kdegraphics-thumbnailers keditbookmarks kf5 kf5-aids kio-extras kio-gdrive konsole lib32-gamemode libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdbusmenu-qt6 libgpod libnfs noto-fonts noto-fonts-cjk noto-fonts-emoji okular orca p7zip partitionmanager plasma qt5-imageformats packagekit-qt5 simple-scan spectacle steam steam-native-runtime ttf-liberation unarchiver unrar usbguard vlc wget xdg-user-dirs-gtk youtube-dl yt-dlp"
@@ -69,12 +61,19 @@ install_desktop() {
 }
 
 install_os() {
+    ## Detect CPU and GPU.
+    DETECT_CPU=`cat /proc/cpuinfo | tr -d " " | head -10 | grep vendor_id | cut -d : -f 2`
+    DETECT_GPU=`lspci | grep VGA | cut -d ":" -f 3 | cut -d " " -f 2`
+
+    ## Installation PARTUUID
+    DETECT_INSTALL=`lsblk -o PARTUUID $INSTALL_DEVICE | tr "\n" "," | cut -d "," -f 2`
+
     ## Initialize pacman-keyring
     pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
     pacman-key --lsign-key FBA220DFC880C036
     pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
     pacman-key --init
-    pacman-key --populate archlinux chaotic-aur
+    pacman-key --populate archlinux chaotic
 
     ## Install pacman.conf
     install -Dm644 pacman.conf /etc/pacman.conf
@@ -83,20 +82,20 @@ install_os() {
     ## Install System
     pacstrap $MOUNT_DIR $INSTALL_BASE
     arch-chroot $MOUNT_DIR pacman-key --init
-    arch-chroot $MOUNT_DIR pacman-key --populate archlinux chaotic-aur
+    arch-chroot $MOUNT_DIR pacman-key --populate archlinux chaotic
 
     ## Install the display drivers
     if [[ "$DETECT_GPU" == "Advanced" ]]; then
         ## Install AMD GPU drivers
-        arch-chroot $MOUNT_DIR pacman -S --noconfirm $MOUNT_DIR $AMD_DRV
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm $AMD_DRV
         echo "Installed AMD Drivers..." && sleep 5
     elif [[ "$DETECT_GPU" == "Intel" ]]; then
         ## Install Intel GPU drivers
-        arch-chroot $MOUNT_DIR pacman -S --noconfirm $MOUNT_DIR $INTEL_DRV
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm $INTEL_DRV
         echo "Installed Intel Drivers..." && sleep 5
     elif [[ "$DETECT_GPU" == "NVIDIA" ]]; then
         ## Install Nvidia GPU drivers
-        arch-chroot $MOUNT_DIR pacman -S --noconfirm $MOUNT_DIR $NVIDIA_DRV
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm $NVIDIA_DRV
         ## Enable Nvidia related services
         arch-chroot $MOUNT_DIR systemctl enable nvidia-hibernate
         arch-chroot $MOUNT_DIR systemctl enable nvidia-persistenced
@@ -121,7 +120,7 @@ install_os() {
     ## Install GRUB
     arch-chroot $MOUNT_DIR grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id="$OS_NAME" $BOOT_DEVICE
     ## Configure GRUB
-    sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"root=UUID=$DETECT_INSTALL rootfstype=btrfs resume=UUID=$DETECT_INSTALL rootflags=subvol=@ loglevel=3 lsm=landlock,lockdown,yama,integrity,apparmor,bpf mitigations=off nowatchdog threadirqs usbbcore.autosuspend=-1\"/" $MOUNT_DIR/etc/default/grub
+    sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"root=PARTUUID=$DETECT_INSTALL rootfstype=btrfs resume=PARTUUID=$DETECT_INSTALL rootflags=subvol=@ loglevel=3 lsm=landlock,lockdown,yama,integrity,apparmor,bpf mitigations=off threadirqs usbbcore.autosuspend=-1\"/" $MOUNT_DIR/etc/default/grub
     sed -i -e "s/#GRUB_DISABLE_SUBMENU=y/GRUB_DISABLE_SUBMENU=y/" $MOUNT_DIR/etc/default/grub
     ## Initialize GRUB
     arch-chroot $MOUNT_DIR grub-mkconfig -o /boot/grub/grub.cfg
@@ -141,6 +140,9 @@ install_os() {
     echo "ACTION==\"add|change\", KERNEL==\"sd[a-z]*|mmcblk[0-9]*\", ATTR{queue/rotational}==\"0\", ATTR{queue/scheduler}=\"none\"" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
     echo "NVME SSD" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
     echo "ACTION==\"add|change\", KERNEL==\"nvme[0-9]*\", ATTR{queue/rotational}==\"0\", ATTR{queue/scheduler}=\"none\"" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
+
+    ## Use CPU Performance Governor by Default.
+    sed -i -e "s/#governor='ondemand'/governor='performance'/" $MOUNT_DIR/etc/default/cpupower
 
     ## Disable Core Dumps
     echo "kernel.core_pattern=/dev/null" > $MOUNT_DIR/etc/sysctl.d/50-coredump.conf
@@ -176,9 +178,11 @@ install_os() {
     sed -i -e 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' $MOUNT_DIR/etc/sudoers
 
     ## Enable desktop services system-wide
+    arch-chroot $MOUNT_DIR systemctl enable ananicy-cpp.service
     arch-chroot $MOUNT_DIR systemctl enable avahi-daemon.service
     arch-chroot $MOUNT_DIR systemctl enable avahi-dnsconfd.service
     arch-chroot $MOUNT_DIR systemctl enable bluetooth.service
+    arch-chroot $MOUNT_DIR systemctl enable cpupower.service
     arch-chroot $MOUNT_DIR systemctl disable dbus.service
     arch-chroot $MOUNT_DIR systemctl enable dbus-broker.service
     arch-chroot $MOUNT_DIR systemctl enable fstrim.timer
