@@ -27,7 +27,7 @@ OS_NAME="Archlinux"
 #<-- OS Install List -->
 
 ## Install Base System
-INSTALL_BASE="alsa-utils ananicy-cpp ananicy-rules-git apparmor archlinux-keyring base base-devel bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs chaotic-keyring chaotic-mirrorlist dbus-broker efibootmgr exfatprogs ffmpeg git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us iwd lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 linux-zen linux-zen-headers linux-firmware lsb-release man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager networkmanager-openvpn openssh pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf realtime-privileges rtirq sudo vim vim-runtime wireless-regdb wireplumber xf86-input-evdev xf86-input-libinput zram-generator"
+INSTALL_BASE="alsa-utils ananicy-cpp ananicy-rules-git apparmor bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs clinfo dbus-broker efibootmgr exfatprogs ffmpeg git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us iwd lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-ocl-icd lib32-opencl-mesa lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 lib32-vulkan-mesa-layers linux-zen linux-zen-headers linux-firmware lsb-release man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager networkmanager-openvpn ocl-icd opencl-mesa openssh pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf realtime-privileges rtirq sudo vim vim-runtime vulkan-mesa-layers wireless-regdb wireplumber xf86-input-evdev xf86-input-libinput zram-generator"
 
 ## Install Plasma Desktop
 INSTALL_DESKTOP="appmenu-gtk-module archlinux-appstream-data ark dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox firewalld flatpak gamemode gwenview icoutils kaccounts-integration kamera kate kcalc kdeconnect kdegraphics-thumbnailers keditbookmarks kf5 kf5-aids kio-extras kio-gdrive konsole lib32-gamemode libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdbusmenu-qt6 libgpod libnfs noto-fonts noto-fonts-cjk noto-fonts-emoji okular orca p7zip partitionmanager plasma qt5-imageformats packagekit-qt5 simple-scan spectacle steam steam-native-runtime ttf-liberation unarchiver unrar usbguard vlc wget xdg-user-dirs-gtk youtube-dl yt-dlp"
@@ -35,13 +35,13 @@ INSTALL_DESKTOP="appmenu-gtk-module archlinux-appstream-data ark dolphin dolphin
 #<-- GPU Driver Install List -->
 
 ## AMD GPU DRIVERS
-AMD_DRV="lib32-vulkan-mesa-layers lib32-vulkan-radeon vulkan-mesa-layers vulkan-radeon"
+AMD_DRV="lib32-vulkan-radeon vulkan-radeon"
 
 ## INTEL GPU DRIVERS
-INTEL_DRV="clinfo intel-compute-runtime intel-media-driver lib32-ocl-icd lib32-vulkan-intel lib32-vulkan-mesa-layers ocl-icd onednn onevpl onevpl-cpu onevpl-intel-gpu opencl-headers vulkan-intel vulkan-mesa-layers"
+INTEL_DRV="intel-compute-runtime intel-media-driver lib32-vulkan-intel onednn onevpl onevpl-cpu onevpl-intel-gpu vulkan-intel"
 
 ## NVIDIA GPU DRIVERS
-NVIDIA_DRV="clinfo lib32-libva-vdpau-driver lib32-nvidia-utils lib32-ocl-icd lib32-opencl-nvidia libva-vdpau-driver libvdpau-va-gl nvidia-dkms nvidia-utils ocl-icd opencl-headers opencl-nvidia vdpauinfo"
+NVIDIA_DRV="lib32-libva-vdpau-driver lib32-nvidia-utils lib32-opencl-nvidia libva-vdpau-driver libvdpau-va-gl nvidia-dkms nvidia-utils opencl-nvidia vdpauinfo"
 
 ##<-- Install System, DO NOT EDIT BELOW THIS POINT IF YOU DON'T KNOW WHAT YOU'RE DOING! -->
 
@@ -80,22 +80,22 @@ install_os() {
     install -Dm644 pacman.conf $MOUNT_DIR/etc/pacman.conf
 
     ## Install System
-    pacstrap $MOUNT_DIR $INSTALL_BASE
+    pacstrap $MOUNT_DIR archlinux-keyring base base-devel chaotic-keyring chaotic-mirrorlist
     arch-chroot $MOUNT_DIR pacman-key --init
     arch-chroot $MOUNT_DIR pacman-key --populate archlinux chaotic
 
     ## Install the display drivers
     if [[ "$DETECT_GPU" == "Advanced" ]]; then
         ## Install AMD GPU drivers
-        arch-chroot $MOUNT_DIR pacman -S --noconfirm $AMD_DRV
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm $AMD_DRV $INSTALL_BASE
         echo "Installed AMD Drivers..." && sleep 5
     elif [[ "$DETECT_GPU" == "Intel" ]]; then
         ## Install Intel GPU drivers
-        arch-chroot $MOUNT_DIR pacman -S --noconfirm $INTEL_DRV
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm $INTEL_DRV $INSTALL_BASE
         echo "Installed Intel Drivers..." && sleep 5
     elif [[ "$DETECT_GPU" == "NVIDIA" ]]; then
         ## Install Nvidia GPU drivers
-        arch-chroot $MOUNT_DIR pacman -S --noconfirm $NVIDIA_DRV
+        arch-chroot $MOUNT_DIR pacman -S --noconfirm $NVIDIA_DRV $INSTALL_BASE
         ## Enable Nvidia related services
         arch-chroot $MOUNT_DIR systemctl enable nvidia-hibernate
         arch-chroot $MOUNT_DIR systemctl enable nvidia-persistenced
@@ -120,7 +120,7 @@ install_os() {
     ## Install GRUB
     arch-chroot $MOUNT_DIR grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id="$OS_NAME" $BOOT_DEVICE
     ## Configure GRUB
-    sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"root=PARTUUID=$DETECT_INSTALL rootfstype=btrfs resume=PARTUUID=$DETECT_INSTALL rootflags=subvol=@ loglevel=3 lsm=landlock,lockdown,yama,integrity,apparmor,bpf mitigations=off threadirqs usbbcore.autosuspend=-1\"/" $MOUNT_DIR/etc/default/grub
+    sed -i -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"loglevel=3 quiet\"/GRUB_CMDLINE_LINUX_DEFAULT=\"root=PARTUUID=$DETECT_INSTALL rootfstype=btrfs resume=PARTUUID=$DETECT_INSTALL rootflags=subvol=@ loglevel=3 lsm=landlock,lockdown,yama,integrity,apparmor,bpf mitigations=off nowatchdog threadirqs usbbcore.autosuspend=-1\"/" $MOUNT_DIR/etc/default/grub
     sed -i -e "s/#GRUB_DISABLE_SUBMENU=y/GRUB_DISABLE_SUBMENU=y/" $MOUNT_DIR/etc/default/grub
     ## Initialize GRUB
     arch-chroot $MOUNT_DIR grub-mkconfig -o /boot/grub/grub.cfg
