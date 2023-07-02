@@ -27,10 +27,10 @@ OS_NAME="Archlinux"
 #<-- OS Install List -->
 
 ## Install Base System
-INSTALL_BASE="alsa-utils apparmor bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs clinfo dbus-broker efibootmgr exfatprogs ffmpeg git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us iwd lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-ocl-icd lib32-opencl-mesa lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 lib32-vulkan-mesa-layers linux linux-firmware linux-headers lsb-release man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager networkmanager-openvpn ocl-icd opencl-mesa openssh pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf realtime-privileges rtirq sudo vim vim-runtime vulkan-mesa-layers wireless-regdb wireplumber xf86-input-evdev xf86-input-libinput zram-generator"
+INSTALL_BASE="alsa-utils apparmor bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs clinfo dbus-broker efibootmgr exfatprogs ffmpeg git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server htop hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us iwd lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-ocl-icd lib32-opencl-mesa lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 lib32-vulkan-mesa-layers linux-firmware linux-zen linux-zen-headers lsb-release man-db man-pages mkinitcpio mtools multilib-devel net-tools networkmanager networkmanager-openvpn ocl-icd opencl-mesa openssh pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf realtime-privileges rtirq sudo vim vim-runtime vulkan-mesa-layers wireless-regdb wireplumber xf86-input-evdev xf86-input-libinput zram-generator"
 
 ## Install Plasma Desktop
-INSTALL_DESKTOP="appmenu-gtk-module archlinux-appstream-data ark dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox firewalld flatpak gamemode gwenview icoutils kaccounts-integration kamera kate kcalc kdeconnect kdegraphics-thumbnailers keditbookmarks kf5 kf5-aids kio-extras kio-gdrive konsole lib32-gamemode libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdbusmenu-qt6 libgpod libnfs noto-fonts noto-fonts-cjk noto-fonts-emoji okular orca p7zip partitionmanager plasma qt5-imageformats packagekit-qt5 simple-scan spectacle steam steam-native-runtime ttf-liberation unarchiver unrar usbguard vlc wget xdg-user-dirs-gtk youtube-dl yt-dlp"
+INSTALL_DESKTOP="appmenu-gtk-module archlinux-appstream-data ark dolphin dolphin-plugins ebook-tools ffmpegthumbs firefox firewalld flatpak gamemode gwenview icoutils kaccounts-integration kamera kate kcalc kdeconnect kdegraphics-thumbnailers keditbookmarks kf5 kf5-aids kio-extras kio-gdrive konsole lib32-gamemode libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdbusmenu-qt6 libgpod libnfs noto-fonts noto-fonts-cjk noto-fonts-emoji okular orca p7zip partitionmanager plasma proton-ge-custom qt5-imageformats packagekit-qt5 simple-scan spectacle steam steam-native-runtime ttf-liberation unarchiver unrar usbguard vlc wget xdg-user-dirs-gtk youtube-dl yt-dlp"
 
 #<-- GPU Driver Install List -->
 
@@ -69,17 +69,20 @@ install_os() {
     DETECT_INSTALL=`lsblk -o PARTUUID $INSTALL_DEVICE | tr "\n" "," | cut -d "," -f 2`
 
     ## Initialize pacman-keyring
+    pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
+    pacman-key --lsign-key 3056513887B78AEB
+    pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
     pacman-key --init
-    pacman-key --populate archlinux
+    pacman-key --populate archlinux chaotic
 
     ## Install pacman.conf
     install -Dm644 pacman.conf /etc/pacman.conf
     install -Dm644 pacman.conf $MOUNT_DIR/etc/pacman.conf
 
     ## Install System
-    pacstrap $MOUNT_DIR archlinux-keyring base base-devel
+    pacstrap $MOUNT_DIR archlinux-keyring base base-devel chaotic-keyring chaotic-mirrorlist
     arch-chroot $MOUNT_DIR pacman-key --init
-    arch-chroot $MOUNT_DIR pacman-key --populate archlinux
+    arch-chroot $MOUNT_DIR pacman-key --populate archlinux chaotic
 
     ## Install the display drivers
     if [[ "$DETECT_GPU" == "Advanced" ]]; then
