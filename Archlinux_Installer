@@ -27,15 +27,15 @@ OS_NAME="Archlinux"
 #<-- OS Install List -->
 
 ## Install Base System
-INSTALL_BASE="alsa-utils apparmor bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs clinfo dbus-broker efibootmgr exfatprogs ffmpeg git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us iwd lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-ocl-icd lib32-opencl-mesa lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 lib32-vulkan-mesa-layers linux-firmware linux-zen linux-zen-headers lsb-release man-db man-pages mkinitcpio mkinitcpio-firmware multilib-devel net-tools networkmanager networkmanager-openvpn ocl-icd opencl-mesa openssh pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf realtime-privileges rtirq sudo vim vim-runtime vulkan-mesa-layers wireless-regdb wireplumber xf86-input-evdev xf86-input-libinput zram-generator"
+INSTALL_BASE="alsa-utils apparmor bash-completion bluez bluez-hid2hci bluez-plugins bluez-tools bluez-utils btrfs-progs clinfo dbus-broker efibootmgr exfatprogs ffmpeg git grub grub-btrfs gst-libav gst-plugin-libcamera gst-plugin-pipewire gst-plugins-bad gst-plugins-bad-libs gst-plugins-base gst-plugins-base-libs gst-plugins-espeak gst-plugins-good gst-plugins-ugly gst-rtsp-server hunspell hunspell-en_au hunspell-en_ca hunspell-en_gb hunspell-en_us iwd lib32-gst-plugins-base lib32-gst-plugins-base-libs lib32-gst-plugins-good lib32-ocl-icd lib32-opencl-mesa lib32-pipewire lib32-pipewire-jack lib32-pipewire-v4l2 lib32-vulkan-mesa-layers linux-firmware linux-cachyos linux-cachyos-headers lsb-release man-db man-pages mkinitcpio mkinitcpio-firmware mtools multilib-devel net-tools networkmanager networkmanager-openvpn ocl-icd opencl-mesa openssh pkgstats pipewire pipewire-alsa pipewire-jack pipewire-pulse pipewire-v4l2 pipewire-x11-bell pipewire-zeroconf realtime-privileges sudo vim vim-runtime vulkan-mesa-layers wireless-regdb wireplumber xf86-input-evdev xf86-input-libinput zram-generator"
 
-## Install GNOME Desktop
-INSTALL_DESKTOP="adw-gtk3 adwaita-cursors adwaita-icon-theme archlinux-appstream-data bluez-cups cups cups-filters dconf-editor devhelp drawing ebook-tools eog evince file-roller firefox firewalld flatpak gamemode gdm gdm-settings geary gnome-backgrounds gnome-browser-connector gnome-calculator gnome-calendar gnome-characters gnome-color-manager gnome-connections gnome-console gnome-contacts gnome-control-center gnome-disk-utility gnome-firmware gnome-font-viewer gnome-keyring gnome-session gnome-settings-daemon gnome-shell gnome-sound-recorder gnome-system-monitor gnome-text-editor gnome-tweaks gnome-user-docs gnome-user-share gnome-weather gvfs-afc gvfs-goa gvfs-google gvfs-gphoto2 gvfs-mtp gvfs-nfs gvfs-smb lib32-gamemode lib32-mangohud libappimage lollypop mangohud malcontent nautilus orca p7zip polari power-profiles-daemon proton-ge-custom qgnomeplatform-qt5 qgnomeplatform-qt6 qt5-wayland qt6-wayland simple-scan steam steam-native-runtime sushi system-config-printer ttf-liberation unrar usbguard vlc wget xdg-desktop-portal-gnome xdg-user-dirs-gtk yelp youtube-dl yt-dlp"
+## Install Plasma Desktop
+INSTALL_DESKTOP="appmenu-gtk-module archlinux-appstream-data ark dolphin dolphin-plugins dxvk-mingw-git ebook-tools ffmpegthumbs firefox firewalld flatpak gamemode gwenview heroic-games-launcher-bin icoutils kaccounts-integration kamera kate kcalc kdeconnect kdegraphics-thumbnailers keditbookmarks kf5 kf5-aids kio-extras kio-gdrive konsole lib32-gamemode lib32-mangohud libappimage libdbusmenu-glib libdbusmenu-gtk2 libdbusmenu-gtk3 libdbusmenu-qt5 libdbusmenu-qt6 libgpod libnfs lutris maliit-framework maliit-keyboard mangohud noto-fonts noto-fonts-cjk noto-fonts-emoji okular orca p7zip partitionmanager plasma proton-ge-custom protontricks-git qt5-imageformats packagekit-qt5 simple-scan spectacle steam steam-native-runtime ttf-liberation unarchiver unrar usbguard vlc vkd3d-proton-mingw-git wget wine-ge-custom xdg-user-dirs-gtk xpadneo-dkms youtube-dl yt-dlp"
 
 #<-- GPU Driver Install List -->
 
 ## AMD GPU DRIVERS
-AMD_DRV="lib32-vulkan-radeon vulkan-radeon"
+AMD_DRV="lib32-vulkan-radeon vulkan-radeon xf86-video-amdgpu"
 
 ## INTEL GPU DRIVERS
 INTEL_DRV="intel-compute-runtime intel-media-driver lib32-vulkan-intel onednn onevpl onevpl-cpu onevpl-intel-gpu vulkan-intel"
@@ -52,13 +52,11 @@ install_desktop() {
     arch-chroot $MOUNT_DIR pacman -S --noconfirm $INSTALL_DESKTOP
 
     ## Enable desktop services system-wide
-    arch-chroot $MOUNT_DIR systemctl enable cups.service
-    arch-chroot $MOUNT_DIR systemctl enable cups-browsed.service
-    arch-chroot $MOUNT_DIR systemctl enable gdm.service
+    arch-chroot $MOUNT_DIR systemctl enable sddm.service
 
     ## Add user to groups
     arch-chroot $MOUNT_DIR gpasswd -a $USERNAME flatpak
-    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME gdm
+    arch-chroot $MOUNT_DIR gpasswd -a $USERNAME sddm
     echo "Installed Desktop Enviornment..." && sleep 5
 }
 
@@ -143,9 +141,6 @@ install_os() {
     echo "NVME SSD" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
     echo "ACTION==\"add|change\", KERNEL==\"nvme[0-9]*\", ATTR{queue/rotational}==\"0\", ATTR{queue/scheduler}=\"none\"" >> $MOUNT_DIR/etc/udev/rules.d/60-ioschedulers.rules
 
-    ## Use CPU Performance Governor by Default.
-    sed -i -e "s/#governor='ondemand'/governor='performance'/" $MOUNT_DIR/etc/default/cpupower
-
     ## Disable Core Dumps
     echo "kernel.core_pattern=/dev/null" > $MOUNT_DIR/etc/sysctl.d/50-coredump.conf
 
@@ -160,7 +155,6 @@ install_os() {
 
     ## Configure global environment
     echo "EDITOR=/usr/bin/vim" >> $MOUNT_DIR/etc/environment
-    echo "QT_QPA_PLATFORMTHEME='gnome'" >> $MOUNT_DIR/etc/environment
 
     ## Set system language
     echo "LANG=$LOCALE" > $MOUNT_DIR/etc/locale.conf
